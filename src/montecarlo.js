@@ -4,7 +4,7 @@
 
 //var confidenceFactor = config.confidence;
 
-var TOTAL_ITERATIONS = config.totalIterations;
+var TOTAL_ITERATIONS = 10000;
 
 
 function getTotalSprintPlanning(sprint) {
@@ -15,37 +15,44 @@ function getTotalSprintPlanning(sprint) {
 	return total;
 }
 
+//no bias
+
 __defaultBiasFun = function (item) {
-	if(!item.hasOwnProperty(biasedValue)) {
+    
+	if(!item.hasOwnProperty("biasedValue")) {
 		item.biasedValue = item.value;
 	}
+	return item;
 }
 
-function MonteCarlo () {
+function MonteCarlo (settings) {
 
 	var self = this;
 	this.config = function (options) {
 		self.threshold = options.threshold;
 		self.totalIterations = options.iterations || TOTAL_ITERATIONS;
-		self.biasFun = options.bias || __defaultBiasFun;
-		self.threshold = options.threshold;
+		self.biaser = options.biaser || __defaultBiasFun;
 		return self;
 	};
 
+	this.config(settings || {});
+
 	this.roll = function (items, threshold){
 
+	//Table containing the values with the corresponding totals
+	var retTable = {};
+				
 		try {
 			for(var i = 0; i < self.totalIterations; i++) {
 				var biasedItems = [];
 				var totalBiased = 0;
 				items.forEach(function(item){
-					var biasedItem = self.bias(item);
+
+					var biasedItem = self.biaser(item);
 					biasedItems.push(biasedItem);
 					totalBiased += biasedItem.biasedValue;
 				});
 
-				//Table containing the values with the corresponding totals
-				var retTable = {};
 				if (retTable[""+totalBiased]) {
 					retTable[""+totalBiased].count++;		
 				}
@@ -54,6 +61,7 @@ function MonteCarlo () {
 				}
 		
 			}
+			
 
 			var cumulative = 0;
 	    	var valueAtThreshold = null;
@@ -63,18 +71,19 @@ function MonteCarlo () {
 			//calculate the cumulative probability
 			for(var key in retTable) {
 		    	var count = retTable[key].count;
-		    	var probability = Math.ceil(count * 10000/totalIterations)/10000;
+		    	var probability = Math.ceil(count * 10000/self.totalIterations)/10000;
 		    	retTable[key].probability = probability;
 		    	retTable[key].cumulative = Math.ceil((cumulative + probability) *10000) / 10000;
 		    	cumulative = retTable[key].cumulative;
 
 		    	if (threshold != null &&
-		    		cumulative >= mcThreshold && valueAtThreshold == null) {
+		    		cumulative >= threshold && valueAtThreshold == null) {
 		    		valueAtThreshold = key;
 		    		thresholdIndex = counter;
 		    	}
 		    	counter++;
 		    }
+		    //console.log(retTable);
 
 		    return { 
 	    			probabilityTable : retTable,
@@ -84,19 +93,21 @@ function MonteCarlo () {
     
 		}
 		catch(e){
-			console.log("@simulator#runMontecarlo", e)
+			console.log("@Montecarlo:roll", e)
 		}
 		
 	}
 
+};
+
+MonteCarlo.prototype.constructor = function (settings) {
+	//this.config(settings);
 }
 
 
 
 
 
-module.exports = {
-	runMontecarlo : runMontecarlo
-}
+module.exports = MonteCarlo;
 
 

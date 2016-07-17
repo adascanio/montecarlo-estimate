@@ -1,5 +1,4 @@
 var config = require("../../config/config.json");
-var _ = require("underscore");
 
 var confidenceFactor = config.confidence;
 
@@ -17,35 +16,6 @@ function getRndDistribution(min, max, bias, influence) {
     return rnd * (1 - mix) + bias * mix;  
 }
 
-/**
- * Calculate the total estimated valueh for a list of items selecting a random 
- * value with uniforme or biased distribution.
- * @param {Array} portfolio a list of items to be biased
- * @return {Object} <code>ret.biasedPortfolio</code> a copy of the input porfolio containing also biased estimation
- *                  <code>total</code> the total biased estimation
- */
-function bias(portfolio, settings) {
-
-	var confidence = settings.confidence || confidenceFactor;
-
-	var biasedPortfolio = _.clone(portfolio);
-
-	var total = 0;
-
-	
-	for (var i=0, len = biasedPortfolio.length ; i < len; i++) {
-		
-		var card = biasedPortfolio[i];
-
-		biasCard (card, {confidence : confidence});
-		
-		total += Math.round(card.biasedEstimation);
-	}
-
-
-	return { biasedPortfolio : biasedPortfolio, total : total};
-
-}
 
 /**
  * Perform a biased estimation of a card.
@@ -54,10 +24,11 @@ function bias(portfolio, settings) {
  * 	<code>id</code>
  *  <code>estimation</code>
  */
-function biasCard (card, settings) {
+function bias (card, settings) {
 
 
 	var confFactor = settings.confidence || config.confidenceFactor;
+	var biasedKey = settings.key;
     
     if (card.confidence instanceof Array) {
     	confFactor = card.confidence;
@@ -66,7 +37,7 @@ function biasCard (card, settings) {
     	confFactor = confFactor[card.confidence] || config.confidenceFactor[0];
     }
 
-	var est = card.estimation;
+	var est = card[biasedKey];
 	var initialValue = est * (1 - confFactor[0]);
 	var endValue = est * (1 + confFactor[1]);
 	var biasType = card.bias;
@@ -77,7 +48,7 @@ function biasCard (card, settings) {
 	
 	var value = Math.round(getRndDistribution(initialValue, endValue, bias, influence));
 
-	card.biasedEstimation = Math.round(value);
+	card.biasedValue = Math.round(value);
 }
 
 /**
