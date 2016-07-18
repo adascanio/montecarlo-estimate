@@ -1,8 +1,5 @@
 
-//var biaser = require("./biaser.js");
-//var util = require("util");
-
-//var confidenceFactor = config.confidence;
+var biaser = require("./biaser.js");
 
 var TOTAL_ITERATIONS = 10000;
 
@@ -31,7 +28,7 @@ function MonteCarlo (settings) {
 	this.config = function (options) {
 		self.threshold = options.threshold;
 		self.totalIterations = options.iterations || TOTAL_ITERATIONS;
-		self.biaser = options.biaser || __defaultBiasFun;
+		self.bias = options.bias || biaser.bias;
 		return self;
 	};
 
@@ -48,7 +45,8 @@ function MonteCarlo (settings) {
 				var totalBiased = 0;
 				items.forEach(function(item){
 
-					var biasedItem = self.biaser(item);
+					var biasedItem = self.bias(item);
+
 					biasedItems.push(biasedItem);
 					totalBiased += biasedItem.biasedValue;
 				});
@@ -59,6 +57,8 @@ function MonteCarlo (settings) {
 				else {
 					retTable[""+totalBiased] = {count : 1}
 				}
+				//retTable[""+total].solution = biasedItems;
+				retTable[""+totalBiased].solution = biasedItems;
 		
 			}
 			
@@ -83,8 +83,7 @@ function MonteCarlo (settings) {
 		    	}
 		    	counter++;
 		    }
-		    //console.log(retTable);
-
+		    
 		    return { 
 	    			probabilityTable : retTable,
 	    		 	valueAtThreshold : valueAtThreshold,

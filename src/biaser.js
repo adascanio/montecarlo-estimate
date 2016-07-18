@@ -1,4 +1,4 @@
-var config = require("../../config/config.json");
+var config = require("../config/config.json");
 
 var confidenceFactor = config.confidence;
 
@@ -26,9 +26,10 @@ function getRndDistribution(min, max, bias, influence) {
  */
 function bias (card, settings) {
 
+	settings = settings || {};
 
-	var confFactor = settings.confidence || config.confidenceFactor;
-	var biasedKey = settings.key;
+	var confFactor = settings.confidence || config.confidence;
+	var biasedKey = settings.key || "value";
     
     if (card.confidence instanceof Array) {
     	confFactor = card.confidence;
@@ -44,11 +45,13 @@ function bias (card, settings) {
 
 	var bias = selectBias(biasType, initialValue, endValue, est);
 
+	//if bias value is negative, the distribution should be uniform
 	var influence = bias >= 0 ? 1: 0;
-	
+
 	var value = Math.round(getRndDistribution(initialValue, endValue, bias, influence));
 
-	card.biasedValue = Math.round(value);
+	card.biasedValue = value;
+	return card;
 }
 
 /**
