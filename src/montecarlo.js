@@ -12,16 +12,6 @@ function getTotalSprintPlanning(sprint) {
 	return total;
 }
 
-//no bias
-
-__defaultBiasFun = function (item) {
-    
-	if(!item.hasOwnProperty("biasedValue")) {
-		item.biasedValue = item.value;
-	}
-	return item;
-}
-
 function MonteCarlo (settings) {
 
 	var self = this;
@@ -29,6 +19,7 @@ function MonteCarlo (settings) {
 		self.threshold = options.threshold;
 		self.totalIterations = options.iterations || TOTAL_ITERATIONS;
 		self.bias = options.bias || biaser.bias;
+		self.biasKey = options.biasKey;
 		return self;
 	};
 
@@ -38,18 +29,20 @@ function MonteCarlo (settings) {
 
 	//Table containing the values with the corresponding totals
 	var retTable = {};
-				
+		
 		try {
 			for(var i = 0; i < self.totalIterations; i++) {
 				var biasedItems = [];
 				var totalBiased = 0;
 				items.forEach(function(item){
 
-					var biasedItem = self.bias(item);
+					var biasedItem = self.bias(item, {key : self.biasKey});
 
 					biasedItems.push(biasedItem);
 					totalBiased += biasedItem.biasedValue;
 				});
+
+				
 
 				if (retTable[""+totalBiased]) {
 					retTable[""+totalBiased].count++;		
