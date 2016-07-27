@@ -1,42 +1,28 @@
-
+'use strict'
 var biaser = require("./biaser.js");
 
-var TOTAL_ITERATIONS = 10000;
-
-
-function getTotalSprintPlanning(sprint) {
-	var total = 0;
-	sprint.cards.forEach(function(item) {
-		total +=item.estimation;
-	})
-	return total;
-}
-
-function MonteCarlo (settings) {
-
-	var self = this;
-	this.config = function (options) {
-		self.threshold = options.threshold;
-		self.totalIterations = options.iterations || TOTAL_ITERATIONS;
-		self.bias = options.bias || biaser.bias;
-		self.biasKey = options.biasKey;
-		return self;
+class MonteCarlo {
+	
+	constructor(options) {
+		this.TOTAL_ITERATIONS = 10000;
+		this.threshold = options.threshold;
+		this.totalIterations = options.iterations || this.TOTAL_ITERATIONS;
+		this.bias = options.bias || biaser.bias;
+		this.biasKey = options.biasKey;
 	};
 
-	this.config(settings || {});
+	roll (items, threshold) {
 
-	this.roll = function (items, threshold){
-
-	//Table containing the values with the corresponding totals
-	var retTable = {};
+		//Table containing the values with the corresponding totals
+		var retTable = {};
 		
 		try {
-			for(var i = 0; i < self.totalIterations; i++) {
+			for(var i = 0; i < this.totalIterations; i++) {
 				var biasedItems = [];
 				var totalBiased = 0;
-				items.forEach(function(item){
+				items.forEach( item => {
 
-					var biasedItem = self.bias(item, {key : self.biasKey});
+					var biasedItem = this.bias(item, {key : this.biasKey});
 
 					biasedItems.push(biasedItem);
 					totalBiased += biasedItem.biasedValue;
@@ -50,8 +36,8 @@ function MonteCarlo (settings) {
 				else {
 					retTable[""+totalBiased] = {count : 1}
 				}
-				//retTable[""+total].solution = biasedItems;
-				retTable[""+totalBiased].solution = biasedItems;
+				
+				retTable[""+totalBiased].biasedItems = biasedItems;
 		
 			}
 			
@@ -64,7 +50,7 @@ function MonteCarlo (settings) {
 			//calculate the cumulative probability
 			for(var key in retTable) {
 		    	var count = retTable[key].count;
-		    	var probability = Math.ceil(count * 10000/self.totalIterations)/10000;
+		    	var probability = Math.ceil(count * 10000/this.totalIterations)/10000;
 		    	retTable[key].probability = probability;
 		    	retTable[key].cumulative = Math.ceil((cumulative + probability) *10000) / 10000;
 		    	cumulative = retTable[key].cumulative;
@@ -88,18 +74,31 @@ function MonteCarlo (settings) {
 			console.log("@Montecarlo:roll", e)
 		}
 		
-	}
+	};//roll
 
-};
+	static transformToArray(probTable) {
+		try {
 
-MonteCarlo.prototype.constructor = function (settings) {
-	//this.config(settings);
-}
+			var table = [];
+			for(var key in probTable) {
+					table.push({
+						effort : key, 
+						prob : probTable[key].probability, 
+						cumulative : probTable[key].cumulative
+					});
+			}
+
+			table.sort((a, b) => a.effort - b.effort );
+			
+			return table;
+		}
+		catch(e) {
+			console.log(e);
+		}
+	
+	};
 
 
-
-
+} //MonteCarlo
 
 module.exports = MonteCarlo;
-
-
