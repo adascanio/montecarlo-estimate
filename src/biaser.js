@@ -11,9 +11,9 @@ var confidenceFactor = config.confidence;
  * @return the biased randon between min and max
  */
 function getRndDistribution(min, max, bias, influence) {
-  var rnd = Math.random() * (max - min) + min,   // random in range
-        mix = Math.random() * influence;         // random mixer
-    return rnd * (1 - mix) + bias * mix;  
+	var rnd = Math.random() * (max - min) + min,   // random in range
+		mix = Math.random() * influence;         // random mixer
+	return rnd * (1 - mix) + bias * mix;
 }
 
 
@@ -24,19 +24,19 @@ function getRndDistribution(min, max, bias, influence) {
  * 	<code>id</code>
  *  <code>estimation</code>
  */
-function bias (card, settings) {
+function bias(card, settings) {
 
 	settings = settings || {};
 
 	var confFactor = settings.confidence || config.confidence;
 	var biasedKey = settings.key || "value";
-    
-    if (card.confidence instanceof Array) {
-    	confFactor = card.confidence;
-    }
-    else {
-    	confFactor = confFactor[card.confidence] || config.confidenceFactor[0];
-    }
+
+	if (card.confidence instanceof Array) {
+		confFactor = card.confidence;
+	}
+	else {
+		confFactor = confFactor[card.confidence] || config.confidenceFactor[0];
+	}
 
 	var est = card[biasedKey];
 	var initialValue = est * (1 - confFactor[0]);
@@ -46,7 +46,7 @@ function bias (card, settings) {
 	var bias = selectBias(biasType, initialValue, endValue, est);
 
 	//if bias value is negative, the distribution should be uniform
-	var influence = bias >= 0 ? 1: 0;
+	var influence = bias >= 0 ? 1 : 0;
 
 	var value = Math.round(getRndDistribution(initialValue, endValue, bias, influence));
 
@@ -67,27 +67,27 @@ function bias (card, settings) {
  * @param {number} exactValue
  * @return {number} the bias value
  */
-function selectBias (biasType, initialValue, endValue, exactValue) {
+function selectBias(biasType, initialValue, endValue, exactValue) {
 	var ret;
-	
+
 	if (biasType == null) {
 		biasType = config.bias;
 	}
 
-	switch(biasType) {
-		case "exact" :
+	switch (biasType) {
+		case "exact":
 			ret = exactValue;
 			break;
-		case "low" :
+		case "low":
 			ret = initialValue;
 			break;
-		case "medium" :
-			ret = initialValue + (endValue-initialValue)/2;
+		case "medium":
+			ret = initialValue + (endValue - initialValue) / 2;
 			break;
-		case "high" :
+		case "high":
 			ret = endValue
 			break;
-		case "none" :
+		case "none":
 			ret = -1;
 			break;
 	}
@@ -97,5 +97,5 @@ function selectBias (biasType, initialValue, endValue, exactValue) {
 
 
 module.exports = {
-	bias : bias
+	bias: bias
 }
